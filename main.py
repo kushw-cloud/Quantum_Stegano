@@ -50,10 +50,11 @@ def generate_hash(message):
 def hide_data(image_path, encrypted_message, hash_value):
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Error: The file '{image_path}' does not exist. Please provide a valid image.")
+    
     combined_data = encrypted_message.hex() + ':' + hash_value
     secret_image = hide(image_path, combined_data)
     secret_image.save("stego_image.png")
-    print("Data successfully hidden in 'stego_image.png'.")
+    print("✅ Data successfully hidden in 'stego_image.png'.")
 
 # Extracting Data
 def extract_data(stego_image_path, key):
@@ -66,29 +67,32 @@ def extract_data(stego_image_path, key):
     decrypted_message = decrypt_message(encrypted_message, key)
 
     if generate_hash(encrypted_message) == original_hash:
-        print("Integrity Verified! ✅")
+        print("✅ Integrity Verified!")
     else:
-        print("Warning: Data Tampering Detected! ❌")
+        print("❌ Warning: Data Tampering Detected!")
 
     return decrypted_message
 
 # Main Execution
 if __name__ == "__main__":
-    input_image = "input_image.png"
+    # Ask user for the input image path
+    input_image = input("Enter the path to the image file: ").strip()
 
     if not os.path.exists(input_image):
-        print(f"Error: '{input_image}' not found. Please place a valid image in the directory.")
+        print(f"❌ Error: '{input_image}' not found. Please provide a valid image path.")
     else:
         key = generate_qkd_key()
-        message = "Quantum-secured secret message!"
-        
+        message = input("Enter the secret message to hide: ")
+
         # Encryption & Hashing
         encrypted_message = encrypt_message(message, key)
         hash_value = generate_hash(encrypted_message)
-        
+
         # Hide Data in Image
         hide_data(input_image, encrypted_message, hash_value)
 
         # Extraction on the receiver's side
-        extracted_message = extract_data("stego_image.png", key)
-        print("Decrypted Message:", extracted_message)
+        extract_confirmation = input("Do you want to extract the hidden message? (yes/no): ").strip().lower()
+        if extract_confirmation == "yes":
+            extracted_message = extract_data("stego_image.png", key)
+            print("🔓 Decrypted Message:", extracted_message)
